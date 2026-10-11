@@ -8,7 +8,7 @@ Double-click **start.bat**, or run `python server.py` and open http://127.0.0.1:
 4. Review recipients, check the confirmation box, and click **Send product emails**. Each run sends only pending leads, up to the chosen limit. Start another run for the remaining leads.
 5. Review statuses or export them. Retry failures deliberately. Check your Sent folder before retrying uncertain delivery to avoid duplicates.
 
-The database stores leads, statuses, and the template on this computer. SMTP credentials stay only in memory. Keep the server running during sending. Stop allows the active email to finish. A restarted server marks interrupted delivery as uncertain. Sent means SMTP acceptance, not inbox delivery. There is no automatic retry or bounce/unsubscribe ingestion; process unsubscribe replies and remove suppressed contacts from future source lists. This is a local, single-user application; do not expose its port to the internet.
+The database stores leads, statuses, and the template on this computer. SMTP credentials are saved locally in mailbox.dpapi using Windows DPAPI encryption for the current Windows user; this file is excluded from Git. Keep the server running during sending. Connection interruptions mark the affected lead uncertain and continue with the next pending lead. Authentication failures stop the run. Stop allows the active email to finish. A restarted server marks interrupted delivery as uncertain. Sent means SMTP acceptance, not inbox delivery. There is no automatic retry or bounce/unsubscribe ingestion; process unsubscribe replies and remove suppressed contacts from future source lists. This is a local, single-user application; do not expose its port to the internet.
 
 ## Inbox setup
 

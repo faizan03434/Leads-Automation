@@ -4,13 +4,14 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from email.utils import formataddr
 from contextlib import contextmanager
+from credential_store import load_mailbox, save_mailbox
 
 ROOT = Path(__file__).parent
 DB = ROOT / 'campaigns.sqlite3'
 TOKEN = secrets.token_urlsafe(32)
 lock = threading.Lock()
 state = {'running': False, 'stop': False}
-mailbox = {}
+mailbox = load_mailbox()
 DEFAULT = json.loads((ROOT / 'default-template.json').read_text(encoding='utf-8'))
 @contextmanager
 def connect():
@@ -65,7 +66,6 @@ def run_campaign(config, saved):
                     except Exception: smtp.close()
             except (smtplib.SMTPServerDisconnected, TimeoutError, OSError) as e:
                 if not accepted: update(lead['id'], 'uncertain', 'Connection interrupted. Check Sent mailbox before retrying. ' + str(e)[:200])
-                break
             except Exception as e:
                 if not accepted: update(lead['id'], 'failed', str(e)[:300])
                 if isinstance(e, smtplib.SMTPAuthenticationError): break
@@ -127,6 +127,7 @@ class Handler(BaseHTTPRequestHandler):
                         if data['mode']=='starttls': s.ehlo(); s.starttls(context=ssl.create_default_context()); s.ehlo()
                         s.login(data['username'],data['password'])
                     finally: s.close()
+                    save_mailbox(data)
                     mailbox.clear(); mailbox.update(data)
                 elif self.path == '/api/send':
                     if not mailbox: raise ValueError('Connect your SMTP mailbox first')
