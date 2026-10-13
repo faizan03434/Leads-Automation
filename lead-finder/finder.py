@@ -42,10 +42,15 @@ def generate(data):
   country=data['country']; niche=data['niche']; city=data.get('city','').strip(); limit=int(data['limit']); key,value,_=NICHES[niche]
   area=f'area["ISO3166-1"="{COUNTRIES[country]}"]["admin_level"="2"]->.country;'
   if city:
-   area+=f'rel["boundary"="administrative"]["name"={json.dumps(city)}](area.country);map_to_area->.target;'
-  else:area+='area.country->.target;'
+   job['message']='Locating city boundary...'
+   locations=request('https://nominatim.openstreetmap.org/search?'+urllib.parse.urlencode({'city':city,'countrycodes':COUNTRIES[country].lower(),'format':'json','limit':1}))
+   if not locations:raise ValueError('City not found in selected country')
+   south,north,west,east=map(float,locations[0]['boundingbox'])
+   area='';scope=f'({south},{west},{north},{east})'
+  else:
+   area+='area.country->.target;';scope='(area.target)'
   website_filter='[!"website"][!"contact:website"]' if data.get('missing_only') else ''
-  query=f'[out:json][timeout:30];{area}nwr["{key}"="{value}"]["name"]{website_filter}(area.target);out tags {limit};'
+  query=f'[out:json][timeout:30];{area}nwr["{key}"="{value}"]["name"]{website_filter}{scope};out tags {limit};'
   job['message']='Searching OpenStreetMap public business listings...'
   result=request('https://overpass-api.de/api/interpreter',urllib.parse.urlencode({'data':query}).encode(),{'Content-Type':'application/x-www-form-urlencoded'})
   elements=result.get('elements',[]); job['total']=min(len(elements),limit)

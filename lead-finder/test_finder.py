@@ -11,7 +11,7 @@ class FinderTests(unittest.TestCase):
  def tearDown(self):finder.mail.DB=self.old;self.tmp.cleanup()
  def test_search_filter_contacts_and_duplicates(self):
   results={'elements':[{'type':'node','id':1,'tags':{'name':'Cafe One','email':'owner@example.com','addr:city':'Berlin'}},{'type':'node','id':2,'tags':{'name':'Cafe Two','website':'https://example.com'}},{'type':'node','id':3,'tags':{'name':'Cafe Three','email':'bad'}}]}
-  options={'country':'Germany','niche':'cafe','city':'Berlin','limit':10,'missing_only':True}
+  options={'country':'Germany','niche':'cafe','city':'','limit':10,'missing_only':True}
   with patch.object(finder,'request',return_value=results):finder.generate(options);finder.generate(options)
   with finder.mail.connect() as c:
    rows=c.execute('SELECT * FROM businesses ORDER BY id').fetchall();self.assertEqual(len(rows),2);self.assertEqual(rows[0]['email'],'owner@example.com');self.assertEqual(rows[1]['email'],'')
